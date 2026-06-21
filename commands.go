@@ -17,7 +17,7 @@ func CmdDonate(s *Store, bookID, title, donor, phone, bookType, date string) err
 		ID:         bookID,
 		Title:      title,
 		Type:       bookType,
-		Status:     "在库",
+		Status:     StatusAvailable,
 		Donor:      donor,
 		DonorPhone: phone,
 		DonateDate: date,
@@ -45,7 +45,7 @@ func CmdBorrow(s *Store, bookID, member, phone, date string) error {
 		s.Unlock()
 		return fmt.Errorf("书籍编号 %s 不存在", bookID)
 	}
-	if book.Status != "在库" {
+	if book.Status != StatusAvailable {
 		s.Unlock()
 		return fmt.Errorf("书籍 [%s] %s 当前状态为「%s」，无法借出", bookID, book.Title, book.Status)
 	}
@@ -66,7 +66,7 @@ func CmdBorrow(s *Store, bookID, member, phone, date string) error {
 		Returned:    false,
 	}
 
-	book.Status = "借出"
+	book.Status = StatusBorrowed
 	s.Records = append(s.Records, record)
 
 	if err := s.save(); err != nil {
@@ -103,7 +103,7 @@ func CmdReturn(s *Store, bookID, phone, date string) error {
 
 	target.Returned = true
 	target.ReturnDate = date
-	book.Status = "在库"
+	book.Status = StatusAvailable
 
 	if err := s.save(); err != nil {
 		s.Unlock()
